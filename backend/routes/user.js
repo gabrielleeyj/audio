@@ -80,7 +80,7 @@ router.post('/login', async (req, res) => {
 
 // Logout user (POST /logout)
 router.post('/logout', authenticateToken, (req, res) => {
-  res.json({ message: 'Logged out' });
+  res.status(200).json({ message: 'Logged out' });
 });
 
 module.exports = router;
