@@ -1,4 +1,3 @@
-// routes/audio.js
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -21,7 +20,7 @@ const storageLocal = multer.diskStorage({
   destination: function (req, file, cb) {
     const userId = req.user.id;
     const userDir = `./audio/${userId}`;
-    
+
     if (!fs.existsSync(userDir)) {
       fs.mkdirSync(userDir, { recursive: true });
     }
@@ -32,8 +31,12 @@ const storageLocal = multer.diskStorage({
   }
 });
 
+// Configure in-memory storage for S3 uploads
+const storageS3 = multer.memoryStorage();
+
 // Configure multer with 2MB limit
 const upload = multer({
+  storage: process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY ? storageS3 : storageLocal,
   limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
   fileFilter: (req, file, cb) => {
     if (!file.mimetype.startsWith('audio/')) {
@@ -80,9 +83,6 @@ router.post('/upload', authenticateToken, upload.single('audio'), async (req, re
       const userDir = `./audio/${userId}`;
       const filePath = path.join(userDir, req.file.originalname);
       
-      // Save file locally
-      fs.writeFileSync(filePath, req.file.buffer);
-      
       const metadata = {
         name: req.file.originalname,
         size: req.file.size,
@@ -98,7 +98,7 @@ router.post('/upload', authenticateToken, upload.single('audio'), async (req, re
 // Get list of audio files uploaded by the user (GET /audio)
 router.get('/', authenticateToken, async (req, res) => {
   const userId = req.user.id;
-  
+
   if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
     // List files from S3
     const params = {
@@ -183,8 +183,7 @@ router.delete('/:fileName', authenticateToken, async (req, res) => {
     try {
       // Check if the file belongs to the user or the user is an admin
       const data = await s3.headObject(params).promise();
-      
-      const fileOwnerId = data.Metadata.userId; // Assuming metadata contains userId
+      const fileOwnerId = data.Metadata && data.Metadata.userId;
       if (req.user.role === 'admin' || parseInt(fileOwnerId) === userId) {
         await s3.deleteObject(params).promise();
         res.status(204).send();
@@ -197,14 +196,9 @@ router.delete('/:fileName', authenticateToken, async (req, res) => {
   } else {
     // Delete the file locally
     const filePath = path.join(__dirname, `../audio/${userId}/${fileName}`);
-    const userDir = `./audio/${userId}`;
 
     if (fs.existsSync(filePath)) {
-      const fileStats = fs.statSync(filePath);
-
-      // Check if the file belongs to the user or the user is an admin
-      const fileOwnerDir = path.dirname(filePath).split(path.sep).pop();
-      if (req.user.role === 'admin' || parseInt(fileOwnerDir) === userId) {
+      if (req.user.role === 'admin' || req.user.id === userId) {
         fs.unlinkSync(filePath);
         res.status(204).send();
       } else {
@@ -217,4 +211,3 @@ router.delete('/:fileName', authenticateToken, async (req, res) => {
 });
 
 module.exports = router;
-
