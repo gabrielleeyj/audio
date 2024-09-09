@@ -1,0 +1,22 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app  # Mount the backend folder to the container for hot reloading
+      - /app/node_modules  # Prevents overriding node_modules
+    env_file:
+      - ./backend/.env
+    command: ["nodemon", "app.js"]  # Run nodemon for hot reloading

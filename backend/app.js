@@ -23,7 +23,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // User Routes (create, update, read, delete)
 app.use('/user', userRoutes);
 // Audio Routes (upload, list, play, delete)
-app.use('/audio', audioRoutes);  // Add the audio routes
+app.use('/audio', audioRoutes); 
 
 // Error handling middleware
 app.use(errorHandler);
