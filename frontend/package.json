@@ -10,11 +10,28 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@mui/icons-material": "^6.0.1",
+    "@mui/material": "^6.0.1",
+    "@mui/x-date-pickers": "^7.15.0",
+    "@tanstack/query-core": "^5.52.3",
+    "@tanstack/react-form": "^0.31.0",
+    "@tanstack/react-query": "^5.52.3",
+    "@tanstack/react-query-devtools": "^5.52.3",
+    "@tanstack/react-router": "^1.51.6",
+    "ag-grid-community": "^32.1.0",
+    "ag-grid-react": "^32.1.0",
+    "dayjs": "^1.11.13",
+    "install": "^0.13.0",
+    "npm": "^10.8.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
+    "@tanstack/router-devtools": "^1.51.8",
+    "@tanstack/router-plugin": "^1.51.6",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
