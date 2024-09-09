@@ -3,7 +3,10 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const helmet = require('helmet');
 const { errorHandler } = require('./middleware/errorHandler');
-const userRoutes = require('./routes/user');
+
+// Routes
+const userRoutes = require('./routes/user'); // user routes
+const audioRoutes = require('./routes/audio');  // Audio routes
 
 require('dotenv').config();
 
@@ -17,8 +20,10 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// User Routes
+// User Routes (create, update, read, delete)
 app.use('/user', userRoutes);
+// Audio Routes (upload, list, play, delete)
+app.use('/audio', audioRoutes);  // Add the audio routes
 
 // Error handling middleware
 app.use(errorHandler);
