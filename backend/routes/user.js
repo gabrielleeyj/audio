@@ -11,7 +11,7 @@ router.post('/', async (req, res) => {
   const { username, password } = req.body;
   try {
     const user = await createUser(username, password);
-    res.status(201).json({ id: user.id });
+    res.status(201).json({ message: 'user created' });
   } catch (err) {
     res.status(400).json({ error: 'Username already exists' });
   }
