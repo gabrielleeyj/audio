@@ -1,4 +1,3 @@
-// db.js (Database Connection and User Queries)
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
 
@@ -35,13 +34,22 @@ const createUser = async (username, password, role = 'user') => {
   });
 };
 
-
 // Helper function to find user by username
 const findUserByUsername = (username) => {
   return new Promise((resolve, reject) => {
     db.get(`SELECT * FROM users WHERE username = ?`, [username], (err, row) => {
       if (err) return reject(err);
       resolve(row);
+    });
+  });
+};
+
+// Helper function to list all users
+const listUsers = () => {
+  return new Promise((resolve, reject) => {
+    db.all(`SELECT id, username, role, created_at, updated_at FROM users`, [], (err, rows) => {
+      if (err) return reject(err);
+      resolve(rows);
     });
   });
 };
@@ -128,6 +136,7 @@ seedUsers();
 module.exports = {
   createUser,
   findUserByUsername,
+  listUsers,  // Export listUsers
   deleteUser,
   updateUser,
 };
