@@ -1,8 +1,7 @@
-// routes/user.js
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const { createUser, findUserByUsername, deleteUser, updateUser } = require('../db');
+const { createUser, findUserByUsername, deleteUser, updateUser, listUsers } = require('../db');
 const { authenticateToken, authorizeAdmin } = require('../middleware/auth');
 const router = express.Router();
 
@@ -10,11 +9,19 @@ const router = express.Router();
 router.post('/', async (req, res) => {
   const { username, password } = req.body;
   try {
-    const user = await createUser(username, password);
-    res.status(201).json({ message: 'user created' });
+    await createUser(username, password);
+    res.status(201).json({ message: 'User created' });
   } catch (err) {
     res.status(400).json({ error: 'Username already exists' });
   }
+});
+
+// Get list of users (GET /users)
+// Only admins should be allowed to view all users
+router.get('/', authenticateToken, authorizeAdmin, async (req, res) => {
+  const users = await listUsers();
+  if (!users) return res.status(404).json({ error: 'No users found' });
+  res.json({ users });
 });
 
 // Get user details (GET /user/:username)
@@ -29,7 +36,8 @@ router.get('/:username', authenticateToken, async (req, res) => {
   res.json({ id: user.id, username: user.username, role: user.role });
 });
 
-// Update user password (PUT /user/:id) - Users can update their own password, admins can update anyone's
+// Update user password (PUT /user/:id)
+// Users can update their own password, but admins can update any user's password
 router.put('/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   const { password } = req.body;
@@ -48,11 +56,10 @@ router.put('/:id', authenticateToken, async (req, res) => {
 });
 
 // Delete user (DELETE /user/:id)
-// Users can delete their own account, and admins can delete any account.
+// Only admins can delete any account, but users can delete their own account
 router.delete('/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
 
-  // Check if the user is deleting their own account or is an admin
   if (req.user.role !== 'admin' && req.user.id !== parseInt(id)) {
     return res.status(403).json({ error: 'Forbidden: You can only delete your own account' });
   }
