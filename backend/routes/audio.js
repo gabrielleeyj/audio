@@ -2,14 +2,14 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
-const AWS = require('aws-sdk');
+const AWS = require('@aws-sdk/client-s3');
 const { authenticateToken } = require('../middleware/auth');
 require('dotenv').config();
 
 const router = express.Router();
 
 // AWS S3 configuration
-const s3 = new AWS.S3({
+const s3 = new AWS.S3Client({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   region: process.env.AWS_REGION,
@@ -91,6 +91,7 @@ router.post('/upload', authenticateToken, upload.single('audio'), async (req, re
       res.status(201).json({ message: 'File uploaded locally', metadata });
     }
   } catch (err) {
+    console.error('Error uploading file:', err);
     res.status(500).json({ error: 'Failed to upload file' });
   }
 });

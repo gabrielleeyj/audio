@@ -1,7 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const { createUser, findUserByUsername, deleteUser, updateUser, listUsers } = require('../db');
+const { createUser, findUserByUsername, deleteUser, updateUser, listUsers } = require('../db/db');
 const { authenticateToken, authorizeAdmin } = require('../middleware/auth');
 const router = express.Router();
 
@@ -75,14 +75,16 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 // Login user (POST /login)
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
+  console.log("req.body", req.body);
   const user = await findUserByUsername(username);
+  console.log("finding user", user);
   if (!user) return res.status(400).json({ error: 'User not found' });
 
   const isValidPassword = await bcrypt.compare(password, user.password);
   if (!isValidPassword) return res.status(401).json({ error: 'Invalid credentials' });
 
   const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-  res.json({ token });
+  res.status(200).json({ token: token });
 });
 
 // Logout user (POST /logout)
