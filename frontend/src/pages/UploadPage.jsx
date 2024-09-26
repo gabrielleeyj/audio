@@ -1,20 +1,15 @@
-import React, { useState, useContext } from 'react';
-import AuthContext from '../context/AuthContext';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';  // Use react-hook-form
 import { Box, Button, Typography, CircularProgress } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import axios from '../apis/axios';
+import useAxiosAuth from '../apis/useAxiosAuth';
 
-const uploadAudio = async (file, token) => {
+const uploadAudio = async (file) => {
+  const axiosAuth = useAxiosAuth();
   const formData = new FormData();
   formData.append('audio', file); // Append the file to FormData
 
-  const res = await axios.post('https://localhost:3000/audio', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-      Authorization: `Bearer ${token}`, // Add Authorization header
-    },
-  });
+  const res = await axiosAuth.post('/audio/upload', formData);
 
   return res.data;
 };
@@ -24,17 +19,16 @@ const UploadPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isError, setIsError] = useState(false);
-  const { token } = useContext(AuthContext);
 
   const { handleSubmit } = useForm();
 
   const handleFileChange = (e) => {
-    setAudioFile(e.target.files[0]);
+    setAudioFile(e.target.files[0]);  // Set the selected audio file
   };
 
   const onSubmit = async () => {
     if (!audioFile) {
-      setIsError(true);
+      setIsError(true);  // Set error if no file is selected
       return;
     }
 
@@ -43,7 +37,7 @@ const UploadPage = () => {
     setIsSuccess(false);
 
     try {
-      await uploadAudio(audioFile, token);  // Pass the file and token
+      await uploadAudio(audioFile);  // Upload the file with the token
       setIsSuccess(true);
     } catch (err) {
       console.error(err);
@@ -56,20 +50,18 @@ const UploadPage = () => {
   return (
     <Box sx={{ maxWidth: 600, margin: '0 auto', textAlign: 'center', padding: 2 }}>
       <Grid container spacing={2}>
-        <Grid size={12}>
+        <Grid item xs={12}>
           <Typography variant="h4" gutterBottom>
             Upload Audio File
           </Typography>
         </Grid>
-        <Grid size={12}>
+        <Grid item xs={12}>
           <form onSubmit={handleSubmit(onSubmit)}>
-            <input type="file" accept="audio/*" onChange={handleFileChange} />
+            <input type="file" accept="audio/*" onChange={handleFileChange} /> 
+            <Button type="submit" variant="contained" color="primary" sx={{ marginTop: 2 }} disabled={isLoading}>
+              {isLoading ? <CircularProgress size={24} /> : 'Upload'} 
+            </Button>
           </form>
-        </Grid>
-        <Grid size={12}>
-          <Button type="submit" variant="contained" color="primary" sx={{ marginTop: 2 }} disabled={isLoading}>
-            {isLoading ? <CircularProgress size={24} /> : 'Upload'}
-          </Button>
           {isSuccess && <Typography color="success">File uploaded successfully!</Typography>}
           {isError && <Typography color="error">Failed to upload file. Please try again.</Typography>}
         </Grid>
