@@ -2,18 +2,11 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
-const AWS = require('@aws-sdk/client-s3');
 const { authenticateToken } = require('../middleware/auth');
+const { uploadToS3, listS3Objects, getS3ObjectStream, deleteS3Object } = require('../utils/s3Helper'); // S3 helpers
 require('dotenv').config();
 
 const router = express.Router();
-
-// AWS S3 configuration
-const s3 = new AWS.S3Client({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
 
 // Set up multer storage and file size limit (2MB) for local storage
 const storageLocal = multer.diskStorage({
@@ -34,7 +27,7 @@ const storageLocal = multer.diskStorage({
 // Configure in-memory storage for S3 uploads
 const storageS3 = multer.memoryStorage();
 
-// Configure multer with 2MB limit
+// Configure multer with a 2MB limit
 const upload = multer({
   storage: process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY ? storageS3 : storageLocal,
   limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
@@ -45,22 +38,6 @@ const upload = multer({
     cb(null, true);
   }
 });
-
-// Helper function for S3 file upload with metadata
-const uploadToS3 = (userId, file) => {
-  const fileName = `${userId}/${file.originalname}`;
-  const params = {
-    Bucket: process.env.AWS_BUCKET_NAME,
-    Key: fileName,
-    Body: file.buffer,
-    ContentType: file.mimetype,
-    Metadata: {
-      userId: userId.toString()
-    }
-  };
-
-  return s3.upload(params).promise();
-};
 
 // Upload an audio file (POST /audio/upload)
 router.post('/upload', authenticateToken, upload.single('audio'), async (req, res) => {
@@ -102,18 +79,8 @@ router.get('/', authenticateToken, async (req, res) => {
 
   if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
     // List files from S3
-    const params = {
-      Bucket: process.env.AWS_BUCKET_NAME,
-      Prefix: `${userId}/`
-    };
-
     try {
-      const data = await s3.listObjectsV2(params).promise();
-      const files = data.Contents.map(file => ({
-        name: path.basename(file.Key),
-        size: file.Size,
-        location: `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${file.Key}`
-      }));
+      const files = await listS3Objects(userId);
       res.json({ files });
     } catch (err) {
       res.status(500).json({ error: 'Failed to list files from S3' });
@@ -146,13 +113,8 @@ router.get('/play/:fileName', authenticateToken, async (req, res) => {
 
   if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
     // Stream audio file from S3
-    const params = {
-      Bucket: process.env.AWS_BUCKET_NAME,
-      Key: `${userId}/${fileName}`
-    };
-
     try {
-      const stream = s3.getObject(params).createReadStream();
+      const stream = await getS3ObjectStream(userId, fileName);
       stream.pipe(res);
     } catch (err) {
       res.status(404).json({ error: 'File not found in S3' });
@@ -176,21 +138,9 @@ router.delete('/:fileName', authenticateToken, async (req, res) => {
 
   if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
     // Delete file from S3
-    const params = {
-      Bucket: process.env.AWS_BUCKET_NAME,
-      Key: `${userId}/${fileName}`
-    };
-
     try {
-      // Check if the file belongs to the user or the user is an admin
-      const data = await s3.headObject(params).promise();
-      const fileOwnerId = data.Metadata && data.Metadata.userId;
-      if (req.user.role === 'admin' || parseInt(fileOwnerId) === userId) {
-        await s3.deleteObject(params).promise();
-        res.status(204).send();
-      } else {
-        res.status(403).json({ error: 'Forbidden: You can only delete your own files' });
-      }
+      await deleteS3Object(userId, fileName);
+      res.status(204).send();
     } catch (err) {
       res.status(404).json({ error: 'File not found in S3' });
     }
@@ -199,12 +149,8 @@ router.delete('/:fileName', authenticateToken, async (req, res) => {
     const filePath = path.join(__dirname, `../audio/${userId}/${fileName}`);
 
     if (fs.existsSync(filePath)) {
-      if (req.user.role === 'admin' || req.user.id === userId) {
-        fs.unlinkSync(filePath);
-        res.status(204).send();
-      } else {
-        res.status(403).json({ error: 'Forbidden: You can only delete your own files' });
-      }
+      fs.unlinkSync(filePath);
+      res.status(204).send();
     } else {
       res.status(404).json({ error: 'File not found' });
     }
@@ -212,3 +158,4 @@ router.delete('/:fileName', authenticateToken, async (req, res) => {
 });
 
 module.exports = router;
+
