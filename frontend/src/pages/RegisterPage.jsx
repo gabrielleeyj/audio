@@ -1,46 +1,47 @@
-import React from 'react';
-import { useForm } from '@tanstack/react-form';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';  // Use react-hook-form instead
 import { TextField, Button, Box, Typography, CircularProgress } from '@mui/material';
-import { useMutation } from '@tanstack/react-query';
-import { useRouter } from '@tanstack/react-router';
 
+import axios from "../apis/axios";
 const registerUser = async ({ username, password }) => {
-  const response = await fetch('http://localhost:3000/register', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ username, password }),
+  const response = await axios.post('http://localhost:3000/user', {
+    username: username,
+    password: password,
   });
 
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error || 'Registration failed');
+  if (response.status !== 201) {
+    console.error(response.data);
   }
-  return data;
+  return response.data;
 };
 
 const RegisterPage = () => {
-  const router = useRouter();
-  const { mutate: register, isLoading, error, isSuccess } = useMutation(registerUser);
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [isSuccess, setIsSuccess] = useState(false);
 
-  const form = useForm({
-    onSubmit: (values) => {
-      register(values, {
-        onSuccess: () => {
-          router.navigate({ to: '/login' });
-        },
-      });
-    },
-    defaultValues: {
-      username: '',
-      password: '',
-    },
-    validate: {
-      username: (value) => (value ? '' : 'Username is required'),
-      password: (value) => (value.length >= 6 ? '' : 'Password must be at least 6 characters'),
-    },
-  });
+  const {
+    register, 
+    handleSubmit, 
+    formState: { errors } 
+  } = useForm();  // Correct usage of useForm from react-hook-form
+
+  const onSubmit = async (values) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await registerUser(values);
+      setIsSuccess(true);
+    } catch (err) {
+      setError(err);
+    } finally {
+      setIsLoading(false);
+    }
+    navigate('/login');  // Redirect to login after success
+  };
 
   return (
     <Box sx={{ maxWidth: 400, margin: '0 auto', textAlign: 'center' }}>
@@ -60,22 +61,22 @@ const RegisterPage = () => {
         </Typography>
       )}
 
-      <form onSubmit={form.handleSubmit}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <TextField
           fullWidth
           label="Username"
-          {...form.register('username')}
-          error={!!form.errors.username}
-          helperText={form.errors.username}
+          {...register('username', { required: 'Username is required', minLength: 8 })}
+          error={!!errors.username}
+          helperText={errors.username?.message}
           sx={{ marginBottom: 2 }}
         />
         <TextField
           fullWidth
           label="Password"
           type="password"
-          {...form.register('password')}
-          error={!!form.errors.password}
-          helperText={form.errors.password}
+          {...register('password', { required: 'Password is required', minLength: 6 })}
+          error={!!errors.password}
+          helperText={errors.password?.message}
           sx={{ marginBottom: 2 }}
         />
         <Button type="submit" variant="contained" color="primary" fullWidth disabled={isLoading}>
@@ -87,7 +88,7 @@ const RegisterPage = () => {
         variant="outlined"
         color="secondary"
         sx={{ marginTop: 2 }}
-        onClick={() => router.navigate({ to: '/login' })}
+        onClick={() => navigate('/login')}
       >
         Back to Login
       </Button>
@@ -96,3 +97,4 @@ const RegisterPage = () => {
 };
 
 export default RegisterPage;
+

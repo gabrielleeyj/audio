@@ -1,53 +1,95 @@
-import { RouterProvider, Route, createReactRouter } from '@tanstack/react-router';
-import LoginPage from './pages/LoginPage';
-import UploadPage from './pages/UploadPage';
-import RegisterPage from './pages/RegisterPage';
-import { AuthProvider } from './context/AuthContext';
-import Snack, { SnackCtx, useSnackCtx } from './components/Snack';
+import { lazy, Suspense, useMemo } from "react";
+import { Routes, Route } from "react-router-dom";
+import CssBaseline from "@mui/material/CssBaseline";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { AuthProvider } from "./context/AuthContext";
+import RequireAuth from "./context/RequireAuth";
+import Layout from "./layout";
 
-// Define routes
-const loginRoute = new Route({
-  getParentRoute: () => rootRoute,
-  path: 'login',
-  component: LoginPage,
-});
+const Login = lazy(() => import("./pages/LoginPage"));
+const Home = lazy(() => import("./pages/HomePage"));
+const Profile = lazy(() => import("./pages/ProfilePage"));
+const Register = lazy(() => import("./pages/RegisterPage"));
+const Upload = lazy(() => import("./pages/UploadPage"));
+const NotFound = lazy(() => import("./pages/NotFoundPage"));
 
-const registerRoute = new Route({
-  getParentRoute: () => rootRoute,
-  path: 'register',
-  component: RegisterPage, 
-});
+import './App.css'
 
-const uploadRoute = new Route({
-  getParentRoute: () => rootRoute,
-  path: '/',
-  component: UploadPage,
-  beforeLoad: ({ context: { token } }) => {
-    if (!token) {
-      return { redirect: '/login' };
-    }
-  },
-});
+function App() {
+  
+  const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
 
-const rootRoute = new Route({
-  path: '/',
-  component: () => <RouterOutlet />,
-});
-
-const routeTree = rootRoute.addChildren([loginRoute, registerRoute, uploadRoute]);
-const router = createReactRouter({ routeTree });
-
-const App = () => {
-  const snackCtx = useSnackCtx();
+  const theme = useMemo(
+    () =>
+    createTheme({
+      palette: {
+        mode: prefersDarkMode ? "dark" : "light",
+      },
+    }),
+    [prefersDarkMode]
+  );
 
   return (
-    <AuthProvider>
-      <SnackCtx.Provider value={snackCtx}>
-        <RouterProvider router={router} context={{ token: localStorage.getItem('jwtToken') }} />
-        <Snack />
-      </SnackCtx.Provider>
-    </AuthProvider>
+    <ThemeProvider theme={theme}>
+    <CssBaseline />
+     <AuthProvider>
+        <Routes>
+          <Route
+            path="/login"
+            element={
+              <Suspense fallback={<>...</>}>
+                <Login />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <Suspense fallback={<>...</>}>
+                <Register />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/"
+            element={
+              <RequireAuth>
+                <Layout />
+              </RequireAuth>
+            }
+          >
+            <Route index element={<Home />} />
+            <Route 
+              path="Upload"
+              element={
+                <Suspense fallback={<>...</>}>
+                  <Upload />
+                </Suspense>
+              }
+            />
+            <Route 
+              path="Profile"
+              element={
+                <Suspense fallback={<>...</>}>
+                  <Profile />
+                </Suspense>
+              }
+            />
+            <Route
+              path="*"
+              element={
+                <Suspense fallback={<>...</>}>
+                  <NotFound />
+                </Suspense>
+              }
+            />
+          </Route>
+        </Routes>
+      </AuthProvider>
+    </ThemeProvider>
   )
-};
+}
 
-export default App;
+export default App
+
