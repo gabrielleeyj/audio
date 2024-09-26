@@ -1,11 +1,17 @@
 # audio
 
+To run the application.
+You will need to create a `.env` in the `./backend` with the following credentials in place.
 
-Note: To run the production version (served by Nginx), you can build and run the prod stage of your Dockerfile:
-
-```bash
-docker build -t frontend --target prod ./frontend
-docker run -p 80:80 frontend
+```env
+JWT_SECRET=<anythingyouwant> // required
+AWS_ACCESS_KEY_ID=<your s3 bucket id> // optional
+AWS_ACCESS_SECRET_KEY=<your own s3 bucket> // optional
 ```
 
-This will serve the production-ready build on port 80 using Nginx.
+If you choose not to add a AWS S3 Key, its will push the audio files to the local storage via the path `/audio/${userid}/${filename}`
+
+Once you've set your .env then you can run `docker compose up --build`. This should build both the API and UI containers.
+
+Open your browser and start testing the UI `https://localhost`
+
