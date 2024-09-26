@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';  // Use react-hook-form
-import { Box, Button, Typography, CircularProgress } from '@mui/material';
+import { Box, Button, Typography, CircularProgress, InputLabel } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import useAxiosAuth from '../apis/useAxiosAuth';
 
@@ -40,7 +40,7 @@ const UploadPage = () => {
       await uploadAudio(audioFile);  // Upload the file with the token
       setIsSuccess(true);
     } catch (err) {
-      console.error(err);
+      console.log(err);
       setIsError(true);
     } finally {
       setIsLoading(false);
@@ -57,9 +57,15 @@ const UploadPage = () => {
         </Grid>
         <Grid item xs={12}>
           <form onSubmit={handleSubmit(onSubmit)}>
-            <input type="file" accept="audio/*" onChange={handleFileChange} /> 
+            <InputLabel htmlFor="audio-upload">Choose an audio file</InputLabel>
+            <input
+              id="audio-upload" // Ensure the input has an id
+              type="file"
+              accept="audio/*"
+              onChange={handleFileChange}
+            />
             <Button type="submit" variant="contained" color="primary" sx={{ marginTop: 2 }} disabled={isLoading}>
-              {isLoading ? <CircularProgress size={24} /> : 'Upload'} 
+              {isLoading ? <CircularProgress size={24} /> : 'Upload'}
             </Button>
           </form>
           {isSuccess && <Typography color="success">File uploaded successfully!</Typography>}

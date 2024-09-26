@@ -11,7 +11,7 @@ const registerUser = async ({ username, password }) => {
   });
 
   if (response.status !== 201) {
-    console.error(response.data);
+    console.log(response.data);
   }
   return response.data;
 };

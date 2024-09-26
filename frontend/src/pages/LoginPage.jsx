@@ -18,7 +18,7 @@ const LoginPage = () => {
     try {
       await auth.signin(data.username, data.password);
     } catch (error) {
-      console.error("Login failed:", error);
+      console.log("Login failed:", error);
     }
     navigate('/');  // Navigate to home on successful login
   };

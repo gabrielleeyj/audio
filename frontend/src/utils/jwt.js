@@ -10,18 +10,21 @@ import {isString} from "./type-check";
  */
 export const parseClaims = (token) => {
   if (!isString(token) || token === '') {
-    return {};
+    return null;
   }
 
   const parts = token.split('.');
-  if (parts.length < 3) {
-    return {};
+  if (parts.length !== 3) {
+    return null;
   }
 
-  const json = atob(parts[1]);
-  const claims = JSON.parse(json);
-
-  return claims;
+  try {
+    const json = atob(parts[1]);
+    const claims = JSON.parse(json);
+    return claims;
+  } catch (error) {
+    return null;
+  }
 }
 
 /**

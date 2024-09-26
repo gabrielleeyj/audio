@@ -27,7 +27,7 @@ const ProfilePage = () => {
             setUsers(res.data.users);  // Set the users state with data
           }
         } catch (error) {
-          console.error("Error fetching users", error);
+          console.log("Error fetching users", error);
         } finally {
           setUserLoading(false);
         }
@@ -41,7 +41,7 @@ const ProfilePage = () => {
           setAudios(res.data.files);  // Assuming the API returns files in res.data.files
         }
       } catch (error) {
-        console.error("Error fetching audio", error);
+        console.log("Error fetching audio", error);
       } finally {
         setAudioLoading(false);
       }
@@ -59,7 +59,7 @@ const ProfilePage = () => {
         setAudios((prevAudios) => prevAudios.filter((audio) => audio.name !== name));
       }
     } catch (error) {
-      console.error("Error deleting audio", error);
+      console.log("Error deleting audio", error);
     }
   };
 
@@ -179,6 +179,8 @@ const ProfilePage = () => {
                 rowsPerPageOptions={[5, 10, 20]} // Rows per page options
                 checkboxSelection={false} // Optionally enable checkboxes
                 disableSelectionOnClick
+                getRowId={(row) => row.id}
+                data-testid="users-grid"
               />
             </Box>
           </Grid>
@@ -198,6 +200,7 @@ const ProfilePage = () => {
               checkboxSelection={false} // Optionally enable checkboxes
               disableSelectionOnClick
               getRowId={(row) => row.name} // Use 'name' as row identifier
+              data-testid="audio-grid"
             />
           </Box>
         </Grid>
