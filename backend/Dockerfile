@@ -6,7 +6,7 @@ WORKDIR /app
 # Copy package.json and package-lock.json to install dependencies
 COPY package*.json ./
 
-RUN npm install
+RUN npm install 
 
 # Copy the rest of the application code
 COPY . .
@@ -17,6 +17,5 @@ EXPOSE 3001
 # Copy the .env file
 COPY .env .env
 
-# Use nodemon for hot-reloading
 CMD ["node", "app.js"]
 

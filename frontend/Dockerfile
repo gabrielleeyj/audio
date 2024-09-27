@@ -1,5 +1,5 @@
-# Stage 1: Base setup
-FROM node:alpine AS base
+# Stage 1: Build the React app
+FROM node:lts-alpine AS build
 
 # Set working directory
 WORKDIR /app
@@ -8,17 +8,15 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# Copy all source files
+# Copy all files and build the app
 COPY . .
-
-# Stage 2: Build 
 RUN npm run build
 
-# Stage 3: Serve with Nginx for production
+# Stage 2: Serve the app with Nginx
 FROM nginx:latest AS prod
 
-# Copy the built app from the build stage
-COPY --from=build /app/build /usr/share/nginx/html
+# Copy the built app from the previous stage
+COPY --from=build /app/dist /usr/share/nginx/html
 
 # Copy custom Nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
@@ -26,4 +24,5 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Expose port 80
 EXPOSE 80
 
+# Start Nginx server
 CMD ["/usr/sbin/nginx", "-g", "daemon off;"]

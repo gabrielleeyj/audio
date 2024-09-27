@@ -1,6 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const { createUser, findUserByUsername, deleteUser, updateUser, listUsers } = require('../db/db');
 const { authenticateToken, authorizeAdmin } = require('../middleware/auth');
 const router = express.Router();
@@ -88,7 +88,7 @@ router.post('/login', async (req, res) => {
 });
 
 // Logout user (POST /logout)
-router.post('/logout', authenticateToken, (req, res) => {
+router.post('/logout', (req, res) => {
   res.status(200).json({ message: 'Logged out' });
 });
 
