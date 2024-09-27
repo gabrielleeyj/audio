@@ -15,3 +15,14 @@ Once you've set your .env then you can run `docker compose up --build`. This sho
 
 Open your browser and start testing the UI `https://localhost`
 
+
+There are 2 accounts to test functionality.
+
+1. Admin user
+    - username: `admin`
+    - password: `adminPass`
+
+2. Normal user
+    - username: `user`
+    - password: `userPass`
+
