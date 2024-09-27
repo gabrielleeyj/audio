@@ -5,7 +5,7 @@ import { TextField, Button, Box, Typography, CircularProgress } from '@mui/mater
 
 import axios from "../apis/axios";
 const registerUser = async ({ username, password }) => {
-  const response = await axios.post('http://localhost:3000/user', {
+  const response = await axios.post('http://localhost:3001/user', {
     username: username,
     password: password,
   });

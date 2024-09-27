@@ -3,24 +3,16 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      target: dev  # Use the development stage for hot reloading, change to prod to run production build
     ports:
-      - "3000:3000"  # Map port 3000 for React development server
-    volumes:
-      - ./frontend:/app  # Mount the local frontend code to the container for live updates
-      - /app/node_modules  # Prevent node_modules from being overwritten by local system
-    environment:
-      - CHOKIDAR_USEPOLLING=true  # Fixes hot-reloading issues in Docker
+      - "80:80"
+    depends_on:
+      - backend
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
-    volumes:
-      - ./backend:/app  # Mount the backend folder to the container for hot reloading
-      - /app/node_modules  # Prevents overriding node_modules
+      - "3001:3001"
     env_file:
       - ./backend/.env
-    command: ["nodemon", "app.js"]  # Run nodemon for hot reloading

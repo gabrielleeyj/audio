@@ -1,5 +1,5 @@
 # Stage 1: Base setup
-FROM node:lts-alpine AS base
+FROM node:alpine AS base
 
 # Set working directory
 WORKDIR /app
@@ -11,8 +11,7 @@ RUN npm ci
 # Copy all source files
 COPY . .
 
-# Stage 2: Build for production
-FROM base AS build
+# Stage 2: Build 
 RUN npm run build
 
 # Stage 3: Serve with Nginx for production
@@ -28,13 +27,3 @@ COPY nginx.conf /etc/nginx/nginx.conf
 EXPOSE 80
 
 CMD ["/usr/sbin/nginx", "-g", "daemon off;"]
-
-# Stage 4: Development (hot-reload)
-FROM base AS dev
-
-# Install development dependencies and start dev server
-RUN npm install
-EXPOSE 3000
-
-CMD ["npm", "start"]
-

@@ -1,4 +1,4 @@
-FROM node:18
+FROM node:alpine
 
 # Set the Current Working Directory inside the container
 WORKDIR /app
@@ -12,11 +12,11 @@ RUN npm install
 COPY . .
 
 # Expose the application's port
-EXPOSE 3000
+EXPOSE 3001
 
-# Install nodemon globally to handle hot reloading
-RUN npm install -g nodemon
+# Copy the .env file
+COPY .env .env
 
 # Use nodemon for hot-reloading
-CMD ["nodemon", "app.js"]
+CMD ["node", "app.js"]
 
